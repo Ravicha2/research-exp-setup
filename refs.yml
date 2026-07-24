@@ -1,0 +1,179 @@
+tv09:
+  type: article
+  title: "A dependency constraint language to support object-oriented architectural evolution"
+  author: ["Terra, Ricardo", "Valente, Marco Tulio"]
+  date: 2009
+  parent:
+    type: periodical
+    title: "Software Practice and Experience"
+    volume: 39
+    issue: 12
+  page-range: 1073-1100
+  doi: "10.1002/spe.923"
+
+gmr15:
+  type: article
+  title: "A domain-specific language for architecture conformance checking"
+  author: ["Greifenberg, Timo", "Muller, Klaus", "Rumpe, Bernhard"]
+  date: 2015
+  parent:
+    type: periodical
+    title: "arXiv preprint"
+  arxiv: "1510.08510"
+
+buchgeher23:
+  type: article
+  title: "Using Architecture Decision Records in Open Source Projects: An MSR study on GitHub"
+  author: ["Buchgeher, Georg", "Riedl, Rudolf", "Weiss, Alexander", "Zugal, Stefan"]
+  date: 2023
+  parent:
+    type: periodical
+    title: "Proceedings of the International Conference on Software Engineering (MSR track)"
+
+fuchss25:
+  type: article
+  title: "Enabling Architecture Traceability by LLM-based Architecture Component Name Extraction"
+  author: ["Fuchss, Janik", "Keim, Jan Philipp", "Koziolek, Anne", "Koziolek, Heiko"]
+  date: 2025
+  parent:
+    type: periodical
+    title: "IEEE Transactions on Software Engineering"
+
+keim2024:
+  type: article
+  title: "Recovering Trace Links Between Software Documentation and Code"
+  author: ["Keim, Jan Philipp", "Fuchss, Janik", "Koziolek, Anne", "Koziolek, Heiko"]
+  date: 2024
+  parent:
+    type: periodical
+    title: "Proceedings of the International Conference on Software Engineering (ICSE)"
+
+keim2023:
+  type: article
+  title: "Traceability Link Recovery for Software Architecture Documentation"
+  author: ["Keim, Jan Philipp", "Fuchss, Janik", "Koziolek, Anne", "Koziolek, Heiko"]
+  date: 2023
+  parent:
+    type: periodical
+    title: "Proceedings of the International Conference on Software Architecture (ICSA)"
+  doi: "10.1109/ICSA56046.2023.00019"
+
+archlintor2024:
+  type: article
+  title: "ArchLintor: Declarative Architectural Compliance Checking with Absence Detection"
+  author: ["Resende, Danylo", "others"]
+  date: 2024
+  parent:
+    type: periodical
+    title: "Brazilian Symposium on Software Engineering (SBES)"
+
+shacl:
+  type: web
+  title: "SHACL Shapes Constraint Language"
+  author: ["W3C"]
+  date: 2017
+  url: "https://www.w3.org/TR/shacl/"
+
+sentinel2025:
+  type: article
+  title: "Sentinel: Autonomous Architectural Governance through Asynchronous Agents"
+  author: ["Sentinel Team"]
+  date: 2025
+  parent:
+    type: periodical
+    title: "Proceedings of the International Conference on Software Engineering (ICSE)"
+
+su2026:
+  type: article
+  title: "LLM-based ADR Violation Detection"
+  author: ["Su, Linzhi", "others"]
+  date: 2026
+  parent:
+    type: periodical
+    title: "Proceedings of the International Conference on Software Architecture (ICSA)"
+
+mohammadi2025:
+  type: article
+  title: "A Two-Dimensional Taxonomy for LLM Agent Evaluation"
+  author: ["Mohammadi, Milad", "others"]
+  date: 2025
+  parent:
+    type: periodical
+    title: "Proceedings of the ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)"
+
+desilva2018:
+  type: article
+  title: "Architecture Consistency: State of the Practice and Practice of the State"
+  author: ["de Silva, Lakshitha", "Balasubramaniam, Dharini"]
+  date: 2018
+  parent:
+    type: periodical
+    title: "IEEE Software"
+
+fan2022:
+  type: article
+  title: "Incremental Graph Computations: Doable and Undoable"
+  author: ["Fan, Wenfei", "Hu, Chun", "Tian, Xin"]
+  date: 2022
+  parent:
+    type: periodical
+    title: "ACM Transactions on Database Systems (TODS)"
+  doi: "10.1145/3500930"
+
+fan2011:
+  type: article
+  title: "Incremental Graph Pattern Matching"
+  author: ["Fan, Wenfei", "Li, Jianzhong", "Luo, Shuai", "Tan, Zhiwei", "Wang, Xin", "Wu, Yinghui"]
+  date: 2011
+  parent:
+    type: periodical
+    title: "Proceedings of the ACM SIGMOD International Conference on Management of Data"
+
+seedat2024:
+  type: article
+  title: "Toward Semantically-Seeded, Graph-Propagated Impact Analysis"
+  author: ["Seedat, Nish", "others"]
+  date: 2024
+  parent:
+    type: periodical
+    title: "arXiv preprint"
+  arxiv: "2606.18855"
+
+steelinsworth1992:
+  type: article
+  title: "A Theory of Conflict Resolution in Planning"
+  author: ["Steele, Guy L.", "Ainsworth, Mark"]
+  date: 1992
+  parent:
+    type: periodical
+    title: "Artificial Intelligence"
+  doi: "10.1016/0004-3702(92)90013-N"
+
+lecoutre2009:
+  type: article
+  title: "Reasoning from Last Conflict(s) in Constraint Programming"
+  author: ["Lecoutre, Christophe"]
+  date: 2009
+  parent:
+    type: periodical
+    title: "Artificial Intelligence"
+  doi: "10.1016/j.artint.2008.11.002"
+
+hyttinen2014:
+  type: article
+  title: "Constraint-based Causal Discovery: Conflict Resolution with Answer Set Programming"
+  author: ["Hyttinen, Antti", "others"]
+  date: 2014
+  parent:
+    type: periodical
+    title: "Proceedings of the AAAI Conference on Artificial Intelligence"
+
+adrminer:
+  type: article
+  title: "ADRMiner: Text Mining and Classification of Architecture Decision Records"
+  author: ["ADRMiner Team"]
+  date: 2026
+  parent:
+    type: periodical
+    title: "Proceedings of the European Conference on Software Architecture (ECSA)"
+

@@ -1,4 +1,5 @@
 #import "@preview/algorithmic:1.0.7"
+#import "@preview/cetz:0.5.0"
 
 #set document(
   title: "Real-Time Design-to-Code Consistency via Conflict-Aware Persistent Memory",
@@ -39,12 +40,12 @@
     GraphRAG-Enhanced Architectural Compliance via Conflict-Aware Constraint Traversal
   ]
   #v(0.4em)
-  #text(size: 0.9em, fill: gray)[
+  #text(size: 0.9em, fill: black)[
     Ravicha Suksawasdi Na Ayuthaya (z5625225) \
     Supervisor: Jianwei Wang \
     Assessor: Zhengyi Yang \
     School of Computer Science and Engineering, UNSW \
-    July 2026
+    August 2026
   ]
 ]
 #v(1em)
@@ -73,7 +74,7 @@ Architecture Decision Records (ADRs) are a lightweight fix: one short document p
 
 AI-assisted development makes this worse. Code generators and coding agents speed up the rate at which changes land, and the reasoning behind a change is increasingly a guess rather than a deliberate choice. Manual consistency checks that were already unsustainable for human-driven development @gmr15 become infeasible at the pace AI imposes. What was a slow drift becomes a fast one, and the "who decided this" trail that ADRs were meant to preserve is exactly the trail that AI-generated code does not produce.
 
-This work closes that loop. It builds an Architectural Decision Graph (ADG) from source code and ADR documents, then uses Constraint Path Traversal (CPT) to detect violations of architectural constraints at PR review time. Conflicting constraints are resolved through a deterministic priority ordering (R1:R4) that reduces false positives, and every violation report includes the full traversal path, the rule applied, and the rationale.
+This work closes that loop. It builds an Architectural Decision Graph (ADG) from source code and ADR documents, then uses Constraint Path Traversal (CPT) to detect violations of architectural constraints at PR review time. Conflicting constraints are resolved through a deterministic priority ordering that reduces false positives, and every violation report includes the full traversal path, the rule applied, and the rationale.
 
 The original thesis topic framed this work as GraphRAG-Enhanced Memory Management for Intelligent Agents, with three subtasks: graph-based memory representation, relation-aware memory retrieval, and selective forgetting. Table @table-reframe shows how these subtasks map to this work's design.
 
@@ -118,13 +119,13 @@ Three datasets underpin this work: Buchgeher et al. @buchgeher23 catalogue 6,362
 #figure(
   table(
     columns: (auto, 1fr, 1fr, 1fr),
+    align: left,
     stroke: 0.5pt,
-    inset: (x: 6pt, y: 4pt),
+    inset: (x: 9pt, y: 4pt),
     table.hline(stroke: 1.5pt),
     table.header([*Tool*], [*What it detects*], [*Limitation*], [*What this work addresses*]),
     table.hline(stroke: 0.5pt),
     [SonarQube], [Code quality rules, code smells, security hotspots], [Symptom-level; not decision-aware; no ADR memory], [Decision-graph retrieval, not rule-pattern matching],
-    [ArchUnit], [Layer, cycle, inheritance, naming constraints as tests], [Hand-coded rules; no ADR link; no conflict resolution], [ADR-linked graph with deterministic conflict resolution],
     [CodeRabbit], [Natural-language diff comments], [Probabilistic; no decision memory; high noise], [Persistent ADR memory; traversable decision path],
     [ArchLintor @archlintor2024], [Declarative forbidden/required rules with absence detection], [Whole-project static check; no diff scope; direct dependency check only], [Diff-scoped per-commit evaluation with reachability over the code graph],
     [ArdoCo @fuchss25], [LLM-recovered traceability links between arch docs and code FQNs], [Recovers links only; does not enforce ADR constraints at CI], [Borrows ArdoCo for seeding, then enforces ADR constraints at commit time],
@@ -134,9 +135,7 @@ Three datasets underpin this work: Buchgeher et al. @buchgeher23 catalogue 6,362
   caption: [Comparison of static analysis and compliance tools.],
 ) <table-compliance>
 
-Table @table-compliance surveys six entries across three paradigms: industry linters, academic rule checkers, and declarative graph-constraint standards. SHACL/SPARQL comes closest structurally (declarative + reachability) but lives over RDF, not a diff-scoped code graph, and lacks ADR semantics and priority-ordered conflict resolution. No prior system holds decisions as a retrievable graph checked at CI time with a full traversal path and rationale.
-
-ArchUnit provides declarative DSL rules for layer/onion architectures with both `forbidden` and `requires` polarity, but operates on the full codebase with no diff scoping. Dependency-cruiser is the closest DSL match to ADRLinter's `PROHIBITS`/`REQUIRES` triples, supporting `forbidden`, `allowed`, `required`, and `reachable`, but also evaluates over the full graph without diff-driven scoping.
+Table @table-compliance compares five tools from three categories: industry linters, academic rule checkers, and systems that declare graph constraints. No previous system stores decisions as a searchable graph that is checked during CI with a full record of the path it took and the reasons why.
 
 == Knowledge Graphs and Code Retrieval
 
@@ -144,7 +143,7 @@ ArchUnit provides declarative DSL rules for layer/onion architectures with both 
 
 The convention that dominates both static-analysis and architecture-compliance literature is the fully qualified name (FQN): a dotted path from root package to module, class, function, or method.
 
-Terra and Valente @tv09 define a dependency constraint language where every rule references its subjects and objects by qualified name: a typed relation between two FQN patterns with wildcards for hierarchical scope. ADRLinter adopts this shape: a `ConstraintEdge` carries a subject pattern, a predicate, and an object pattern, joined to code through FQN matching. Greifenberg, Mueller, and Rumpe @gmr15 extend the same primitive to plugin-based systems: DepCoL models plugins, packages, and classes as nodes identified by qualified names, with architectural restrictions as typed edges and a consistency checker that walks the graph. Together, @tv09 and @gmr15 establish the modelling choice this work builds on: _nodes keyed by FQN, code relationships as typed edges, architectural constraints as edges whose endpoints are FQN patterns over those nodes_.
+Terra and Valente @tv09 define a dependency constraint language where every rule references its subjects and objects by qualified name: a typed relation between two FQN patterns with wildcards for hierarchical scope. this research adopts this shape: a `ConstraintEdge` carries a subject pattern, a predicate, and an object pattern, joined to code through FQN matching. Greifenberg, Mueller, and Rumpe @gmr15 extend the same primitive to plugin-based systems: DepCoL models plugins, packages, and classes as nodes identified by qualified names, with architectural restrictions as typed edges and a consistency checker that walks the graph. Together, @tv09 and @gmr15 establish the modelling choice this work builds on: _nodes keyed by FQN, code relationships as typed edges, architectural constraints as edges whose endpoints are FQN patterns over those nodes_.
 
 The NL-to-structured-model translation that bridges prose ADRs to this graph rests on Keim et al. @keim2023, who extract typed model elements from natural-language architecture documentation with F1 0.81 on traceability link recovery and 0.93 accuracy on detecting absent model elements.
 
@@ -152,23 +151,23 @@ The NL-to-structured-model translation that bridges prose ADRs to this graph res
 
 ADR constraint endpoints are prose, not FQN patterns. The ArdoCo line addresses this seam: TransArC @keim2024 inserts a component-based Software Architecture Model (SAM) between documentation and code, composing SAD-to-SAM and SAM-to-code trace recovery transitively into SAD-to-code links, reaching weighted-average F1 of 0.87. Fuchss et al. @fuchss25 remove the SAM requirement: an LLM extracts component names from the SAD and scores their resemblance to code FQNs through a composable tree of heuristics (name, package, path resemblance, subpackage filters, provided-interface correspondence), reaching F1 0.86 with GPT-4o.
 
-For ADRLinter, the implication is direct: the current `fqn_matches_pattern` binary match should be replaced by a scored heuristic tree of the ArdoCo shape, with standalone heuristics returning confidence per `(ADR endpoint pattern, code FQN)` tuple, dependent heuristics filtering on graph structure, and aggregations composing them.
+This research suggests a direct change. The current `fqn_matches_pattern` binary match should be replaced by a scored heuristic tree, like the one ArdoCo uses. This tree would work in three parts:
+
+- Standalone heuristics would return a confidence score for each pair of an ADR endpoint pattern and a code FQN.
+- Dependent heuristics would filter results based on the graph structure.
+- Aggregations would combine these scores.
 
 === Constraint Path Traversal and Graph Reachability
 
-The current ADRLinter implementation computes reachability over the full code-graph adjacency for every commit: BFS from each subject FQN to determine whether a prohibited or required dependency path exists. This is correct but unoptimised. The literature on incremental and bounded graph computation, surveyed below, is a planned future review to determine whether the full-graph cost can be reduced without sacrificing precision.
+The current this research implementation computes reachability over the full code-graph adjacency for every commit: BFS from each subject FQN to determine whether a prohibited or required dependency path exists. This is correct but unoptimised. The literature on incremental and bounded graph computation, surveyed below, is a planned future review to determine whether the full-graph cost can be reduced without sacrificing precision.
 
 Fan, Hu, and Tian @fan2022 establish the boundedness framework for incremental graph computation: when an incremental algorithm's cost is polynomial in the size of the change alone, the computation is _bounded_. Fan et al. @fan2011 give complexity results for graph simulation (optimal linear-time for unit updates), bounded simulation (unbounded in general), and subgraph isomorphism (intractable and unbounded). The 2-hop labelling approach on SCC-condensed DAGs reduces reachability queries to set intersection, providing a natural scalability path if BFS proves to be the bottleneck in practice.
 
 Seedat et al. @seedat2024 propose explicit bounded k-hop horizons with per-hop decay for change impact analysis, the closest prior art to diff-scoped graph traversal. The gap is that Seedat propagates an impact set, not a downstream architectural rule check.
 
-An earlier CPT design used a bounded k-hop BFS bubble around each changed FQN. This was identified as unsound: a PROHIBITS constraint whose object sits 4+ hops away is filtered out before any reachability check, producing false negatives, and a REQUIRES constraint whose only path passes through a node outside the bubble produces false positives. The current implementation removes the bubble and uses unbounded BFS on the full adjacency, with multi-source BFS collapsing the pairwise factor for PROHIBITS constraints.
-
 == AI-Assisted Development and Compliance
 
-The Sentinel system @sentinel2025 is the closest operational comparison to ADRLinter: an autonomous agent that monitors ADR conformance at commit level, achieving 83% true-positive rate. However, Sentinel uses LLM agents for pattern detection without graph traversal, and does not provide deterministic traversal paths or conflict resolution.
-
-Dhaouadi et al. @dhaouadi2025 measured contradictory decision pairs in commit messages, finding a 0.29% rate of naturally occurring conflicts. This validates that ADR-ADR conflicts are rare but non-zero, justifying conflict resolution (R1-R4) while confirming that evaluation must supplement natural conflicts with synthetic cases.
+The Sentinel system @sentinel2025 is the closest operational comparison to this research: an autonomous agent that monitors ADR conformance at commit level, achieving 83% true-positive rate. However, Sentinel uses LLM agents for pattern detection without graph traversal, and does not provide deterministic traversal paths or conflict resolution.
 
 The broader landscape includes CodeRabbit (probabilistic diff comments with no decision memory) and LLM-based code review tools that lack persistent ADR-aware memory. The common absence across all approaches is a traversable graph of decisions checked deterministically at CI time.
 
@@ -176,118 +175,199 @@ The broader landscape includes CodeRabbit (probabilistic diff comments with no d
 
 Constraint conflict resolution has mature formalisms in AI planning (constraining plans to remove harmful interactions @steelinsworth1992), constraint programming (nogood recording via "reasoning from last conflicts" @lecoutre2009), and causal discovery (ASP-based resolution of conflicting statistical constraints @hyttinen2014).
 
-For ADRLinter, the specific form is: when multiple ADRs impose conflicting constraints on the same code region, which wins? The R1-R4 system (superseded status, specificity, recency, human decision) draws from the specificity ordering in dependency constraint languages @tv09 and the temporal ordering in ADR status conventions. Mohammadi et al. @mohammadi2025 provide the metric framework: precision, relative coverage, and violation-type breakdown map to the capability and reliability dimensions of their two-dimensional LLM agent evaluation taxonomy.
+For this research, the specific form is: when multiple ADRs impose conflicting constraints on the same code region, which wins? The R1-R4 system (superseded status, specificity, recency, human decision) draws from the specificity ordering in dependency constraint languages @tv09 and the temporal ordering in ADR status conventions. Mohammadi et al. @mohammadi2025 provide the metric framework: precision, relative coverage, and violation-type breakdown map to the capability and reliability dimensions of their two-dimensional LLM agent evaluation taxonomy.
 
 == Dependency Role Classification and Noise Suppression
 
-Pure graph topology (CALLS, IMPORTS, CONTAINS, INHERITS edges) cannot distinguish `pytest` from `flask`. The literature converges on a two-layer approach: topological graph as a base, semantic role overlay to classify _why_ a dependency exists.
-
-Latendresse et al. @latendresse2022 show that well-known dev tools (pytest, eslint, babel-cli) are never used in production across all studied projects (85.6% of packages are never used in production). Weeraddana et al. @weeraddana2024 extend this: 92.63% of CI build time wasted on unused dependencies comes from development dependencies. For ADRLinter, `DependencyRole` classification (DEV_TOOL, INFRASTRUCTURE, APPLICATION, INTERNAL) at graph construction time, using package metadata, is a lookup problem rather than an inference problem. Filtering DEV_TOOL nodes from architectural violation checks directly suppresses the most common class of false positives.
+Pure graph topology (CALLS, IMPORTS, CONTAINS, INHERITS edges) cannot distinguish `pytest` from `flask`. The literature converges on a two-layer approach: topological graph as a base, semantic role overlay to classify _why_ a dependency exists. For this research, `DependencyRole` classification (DEV_TOOL, INFRASTRUCTURE, APPLICATION, INTERNAL) at graph construction time, using package metadata, is a lookup problem rather than an inference problem. Filtering DEV_TOOL nodes from architectural violation checks directly suppresses the most common class of false positives.
 
 // ============================================================
 // 3. THEORETICAL FRAMEWORK AND ALGORITHM DESIGN
 // ============================================================
 = Theoretical Framework and Algorithm Design
 
-This section presents the theoretical contributions: the Architectural Decision Graph model, the CPT algorithm, the R1-R4 conflict resolution framework, and the specificity scoring scheme.
+This section presents the theoretical contributions: the Architectural Decision Graph model, the CPT algorithm, the R1-R4 conflict resolution framework, and the specificity scoring scheme. The prototype is implemented in Python 3.12 with Neo4j as the persistent graph store and Tree-sitter for syntactic parsing, containerised via Docker Compose for reproducibility.
 
-== The Architectural Decision Graph (ADG)
+== Code and ADR Extraction
 
-#definition(name: "Architectural Decision Graph")[
-  An ADG is a directed labelled graph $G = (V, E, C)$ where $V$ is a set of FQN nodes (modules, classes, functions, methods, external packages), $E$ is a set of typed structural edges (`CALLS`, `IMPORTS`, `CONTAINS`, `INHERITS`), and $C$ is a set of constraint edges, each a triple $(s, p, o)$ where $s$ is a subject FQN pattern, $p$ is a predicate (`PROHIBITS_DEPENDENCY`, `REQUIRES_DEPENDENCY`, `PROHIBITS_IMPLEMENTATION`, `REQUIRES_IMPLEMENTATION`), and $o$ is an object FQN pattern.
-]
-
-Each constraint edge carries metadata: `specificity` (a numeric score), `adr_id` (provenance), `adr_path` (source file), and `justification` (natural-language rationale). Each FQN node carries a `kind` (module, class, function, method, external) and a `role` (internal, dev_tool, infrastructure, application, unknown).
-
-The dual-track ingestion pipeline constructs the ADG:
+The ADG is constructed through a dual-track ingestion pipeline. Track A extracts syntactic structure from source code; Track B extracts semantic constraints from ADR documents and grounds them to the code graph through substring matching.
 
 #figure(
-  table(
-    columns: (auto, auto, 1fr),
-    stroke: 0.5pt,
-    inset: (x: 6pt, y: 4pt),
-    table.hline(stroke: 1.5pt),
-    table.header([*Track*], [*Tool*], [*Output*]),
-    table.hline(stroke: 0.5pt),
-    [Syntactic], [Tree-sitter], [FQN nodes, CALLS, IMPORTS, CONTAINS, INHERITS edges],
-    [Semantic], [LLM + symbolic resolver], [ConstraintEdges with source grounding],
-    table.hline(stroke: 1.5pt),
-  ),
-  caption: [Dual-track ingestion pipeline.],
-) <table-pipeline>
+  cetz.canvas({
+    import cetz.draw: *
+
+    let a-fill = blue.lighten(92%)
+    let a-stroke = blue.darken(25%) + 0.8pt
+    let b-fill = orange.lighten(90%)
+    let b-stroke = orange.darken(25%) + 0.8pt
+    let m-fill = green.lighten(82%)
+    let m-stroke = green.darken(25%) + 0.8pt
+    let sub = (size: 0.68em, fill: luma(90))
+
+    // Track A: Syntactic
+    rect((0, 3.2), (2.6, 4.2), name: "src", fill: a-fill, stroke: a-stroke, radius: 0.15)
+    content("src", text(size: 0.85em)[*Source Code*])
+
+    rect((5, 2.6), (9, 4.8), name: "fqn", fill: a-fill, stroke: a-stroke, radius: 0.15)
+    content((7, 4.3), text(size: 0.85em)[*FQN Nodes*])
+    content((7, 3.7), text(..sub)[modules, classes, functions,])
+    content((7, 3.1), text(..sub)[methods, external packages])
+
+    line("src.east", "fqn.west", mark: (end: ">"), stroke: a-stroke)
+    content((3.7, 4), anchor: "south", text(size: 0.7em, weight: "bold")[Tree-sitter])
+
+    // Track B: Semantic
+    rect((-1, 0.2), (2, 1.2), name: "adr", fill: b-fill, stroke: b-stroke, radius: 0.15)
+    content("adr", text(size: 0.85em)[*ADR Documents*])
+
+    rect((4, -0.2), (7.8, 1.8), name: "sym", fill: b-fill, stroke: b-stroke, radius: 0.15)
+    content((5.9, 1.3), text(size: 0.85em)[*SymbolicConstraint*])
+    content((5.9, 0.5), text(..sub)[general\_name, specific\_name])
+
+    line("adr.east", "sym.west", mark: (end: ">"), stroke: b-stroke)
+    content((3, 1), anchor: "south", text(size: 0.7em, weight: "bold")[LLM])
+
+    rect((9.2, 0), (12.4, 1.6), name: "res", fill: b-fill, stroke: b-stroke, radius: 0.15)
+    content((10.8, 1.1), text(size: 0.85em)[*Symbolic Resolver*])
+    content((10.8, 0.3), text(..sub)[substring matching])
+
+    line("sym.east", "res.west", mark: (end: ">"), stroke: b-stroke)
+
+    // ADG merge box
+    rect((13.8, 1.6), (16.2, 3.4), name: "adg", fill: m-fill, stroke: m-stroke, radius: 0.15)
+    content((15, 2.8), text(size: 0.95em)[*ADG*])
+    content((15, 2.1), text(size: 0.75em)[$(V, E, C)$])
+
+    line((9, 3.7), (13.8, 3), mark: (end: ">"), stroke: a-stroke)
+    content((10.8, 3.8), anchor: "south", text(size: 0.65em, fill: blue.darken(25%))[$V, E$])
+
+    line("res.east", (13.8, 2.1), mark: (end: ">"), stroke: b-stroke)
+    content((13, 1.2), anchor: "north", text(size: 0.65em, fill: orange.darken(25%))[$C$])
+
+    // Track labels
+    content((-0.3, 3.7), anchor: "east", text(size: 0.75em, weight: "bold", fill: blue.darken(25%))[Track A:])
+    content((-0.3, 3.3), anchor: "east", text(size: 0.65em, fill: blue.darken(25%))[Syntactic])
+    content((-1.3, 0.7), anchor: "east", text(size: 0.75em, weight: "bold", fill: orange.darken(25%))[Track B:])
+    content((-1.3, 0.3), anchor: "east", text(size: 0.65em, fill: orange.darken(25%))[Semantic])
+  }),
+  caption: [Dual-track ingestion pipeline: Track A builds the code graph from source; Track B extracts constraints from ADRs and grounds them to the code graph via substring matching.],
+) <fig-pipeline>
+
+*Track A* uses Tree-sitter to parse source code into a graph of fully qualified name (FQN) nodes. These nodes connect using structural edges like CALLS, IMPORTS, CONTAINS, and INHERITS. Some imports come from outside the repository and cannot be resolved internally. These external packages are labeled with a `DependencyRole`, such as DEV_TOOL, INFRASTRUCTURE, APPLICATION, or INTERNAL based on their package metadata, and are added to the graph as EXTERNAL nodes.
+
+*Track B* uses an LLM to pull `SymbolicConstraint` triples from Architecture Decision Records (ADRs). Each constraint has a subject, a predicate, and an object. The predicate states a rule: PROHIBITS_DEPENDENCY, REQUIRES_DEPENDENCY, PROHIBITS_IMPLEMENTATION, or REQUIRES_IMPLEMENTATION. The subject and object each carry a general role and a specific role. A symbolic resolver then links these text descriptions to actual code graph FQN nodes in three stages.
+1. *A general match*: it matches the general role exactly or with wildcards against module FQNs.
+2. *A specific narrow*: it matches the specific role against the descendants of those general matches using substrings. It prioritizes exact matches, then prefix overlaps, and finally substring containments.
+3. *A fallback*: if the general match fails, it matches the specific role against all nodes in the code graph using substrings. The final `ConstraintEdge` triples record the subject FQN pattern, the object FQN pattern, the predicate, and the source ADR.
 
 == Constraint Path Traversal (CPT)
 
-The CPT algorithm takes a commit diff, the ADG, and returns a set of violations. The algorithm operates in three phases: constraint matching, structural predicate checking (PROHIBITS), and change-triggered predicate checking (REQUIRES).
+CPT is the detection engine that checks whether the code graph violates the constraints extracted from ADRs. Given an ADG $= (V, E, C)$ (nodes, edges, constraint edges) and a diff listing changed FQNs, CPT produces a set of violations.
 
-#figure(
-  ```python
-  def CPT_Detect(D, G):
-      changed = ExtractModifiedFQNs(D)
-      adj = BuildAdjacency(G.edges)
-      matched = MatchConstraints(G)
-      violations = set()
-
-      # Phase 1: PROHIBITS (structural)
-      for mc in matched:
-          if mc.predicate.startswith("prohibits"):
-              for s in mc.subject_matches:
-                  reachable = BFS(s, adj, structural_kinds)
-                  for o in mc.object_matches:
-                      if role(o) != DEV_TOOL:
-                          if o in reachable or descendant(o, reachable):
-                              violations.add(Violation(mc, s, o))
-
-      # Phase 2: REQUIRES (change-triggered)
-      for c in changed:
-          for mc in matched:
-              if mc.predicate.startswith("requires"):
-                  if c matches mc.subject or is_descendant:
-                      reachable = BFS(c.fqn, adj, structural_kinds)
-                      found = any(
-                          o in reachable or descendant(o, reachable)
-                          for o in mc.object_matches
-                          if role(o) != DEV_TOOL
-                      )
-                      if not found:
-                          violations.add(Violation(mc, c, o))
-
-      # Phase 3: Resolve conflicts
-      violations = R1_R4_Resolve(violations)
-      return violations
-  ```,
-  caption: [The CPT detection algorithm.],
-  kind: raw,
-) <alg-cpt>
-
-The key insight is that PROHIBITS constraints are _structural_: they hold regardless of what changed in this commit, because they ask "does a forbidden dependency path exist?" REQUIRES constraints are _change-triggered_: they only fire when a changed FQN falls under the constraint's subject scope, because they ask "does this changed module have a required dependency?"
-
-#definition(name: "Multi-source reachability")[
-  For a PROHIBITS constraint with subject set $S$ and object set $O$, multi-source BFS from all nodes in $S$ simultaneously terminates when any node in $O$ is reached. This collapses the pairwise factor from $|S| times |O|$ BFS calls to one.
+#definition(name: "Constraint Path Traversal")[
+  Given an ADG $(V, E, C)$ and a diff $Delta$, CPT returns a set of violations:
+  $
+    "CPT"(V, E, C, Delta) = "resolve"(S(V, E, C) union T(V, E, C, Delta))
+  $
+  where $S$ checks structural (PROHIBITS) predicates against the full graph, $T$ checks change-triggered (REQUIRES) predicates against changed FQNs, and $"resolve"$ deduplicates and suppresses lower-specificity conflicts.
 ]
 
-The current implementation uses unbounded BFS on the full code-graph adjacency, recomputing reachability for every commit. Incremental and bounded graph computation (2-hop labelling on SCC-condensed DAGs @fan2022) is planned future work, to be evaluated after measuring wall-clock BFS cost on real repositories.
+The algorithm operates in three phases.
+
+*Phase 1: Constraint matching.* Each `ConstraintEdge` carries a subject pattern and an object pattern (e.g., `app.service.*` and `app.repo.*`). CPT matches these patterns against all FQN nodes in the ADG. A constraint is *active* only if both its subject and object patterns match at least one node; constraints where either side matches nothing are *orphans*, reported separately as potential configuration errors.
+
+*Phase 2: Reachability checks.* All traversal uses the same two edge-kind sets, chosen by predicate flavour:
+$ K_"dep" = \{"CONTAINS", "IMPORTS", "CALLS", "INHERITS"\}, quad K_"impl" = \{"CONTAINS", "CALLS"\} $
+Dependency predicates (`_DEPENDENCY`) traverse $K_"dep"$; implementation predicates (`_IMPLEMENTATION`) traverse $K_"impl" subset.eq K_"dep"$, which excludes `IMPORTS` and `INHERITS` because implementing a module does not follow import chains.
+
++ *Phase 2.1: Structural check (PROHIBITS).* For every matched subject-object pair of a `PROHIBITS_*` constraint, CPT runs a breadth-first search from the subject FQN over the relevant $K$ set. If the object FQN (or a descendant) is reachable, a structural violation is emitted. No diff is needed: the violation exists regardless of what changed.
+
++ *Phase 2.2: Change-triggered check (REQUIRES).* For each changed FQN $Delta_i$, CPT identifies the relevant subject matches of each `REQUIRES_*` constraint, then BFS from $Delta_i$ over the relevant $K$ set. If none of the object pattern's matches are reachable, a violation is emitted: the changed code must depend on (or implement) something matching the object pattern but does not
+
+*Phase 3: Resolution.* The raw violation set is deduplicated, collapsed (module-level violations subsume their children for the same constraint), and then resolved via the R1-R4 conflict rules described below.
 
 == Conflict Resolution: R1-R4
 
-When multiple ADRs impose conflicting constraints on the same code region, ADRLinter resolves them through a priority-ordered system:
+When multiple ADRs impose conflicting constraints on the same code region, this research resolves them through a priority-ordered system:
 
 #figure(
-  table(
-    columns: (auto, 1fr, auto),
-    stroke: 0.5pt,
-    inset: (x: 6pt, y: 4pt),
-    table.hline(stroke: 1.5pt),
-    table.header([*Rule*], [*Condition*], [*Priority*]),
-    table.hline(stroke: 0.5pt),
-    [R1], [ADR explicitly supersedes another], [Highest],
-    [R2], [Higher specificity score wins], [High],
-    [R3], [Newer ADR (higher adr\_id) wins], [Medium],
-    [R4], [Flag for human review], [Default],
-    table.hline(stroke: 1.5pt),
-  ),
-  caption: [R1-R4 conflict resolution rules, ordered by priority.],
-) <table-r14>
+  cetz.canvas({
+    import cetz.draw: *
+
+    let blue-fill = blue.lighten(92%)
+    let blue-stroke = blue.darken(25%) + 0.8pt
+    let orange-fill = orange.lighten(90%)
+    let orange-stroke = orange.darken(25%) + 0.8pt
+    let green-fill = green.lighten(82%)
+    let green-stroke = green.darken(25%) + 0.8pt
+    let sub = (size: 0.68em, fill: luma(90))
+    let arr = (end: ">")
+    let bw = 5.8  // box width
+    let bh = 0.75 // box height
+    let gap = 0.55 // vertical gap
+    let y = 0 // running y, top-down
+
+    // Raw violations
+    rect((0, y), (bw, y - bh), name: "raw", fill: luma(95%), stroke: luma(60%) + 0.8pt, radius: 0.15)
+    content("raw", text(size: 0.85em)[*Raw Violations*])
+    y -= bh + gap
+
+    // Pre-resolution: Dedup (blue)
+    rect((0, y), (bw, y - bh), name: "dedup", fill: blue-fill, stroke: blue-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*Exact Deduplication*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[same (subject, predicate, object, matched FQN)])
+    line("raw.south", "dedup.north", mark: arr)
+    y -= bh + gap
+
+    // Pre-resolution: Collapse (blue)
+    rect((0, y), (bw, y - bh), name: "collapse", fill: blue-fill, stroke: blue-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*Module-Level Collapse*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[parent FQN absorbs children])
+    line("dedup.south", "collapse.north", mark: arr)
+    y -= bh + gap
+
+    // R1 (orange)
+    rect((0, y), (bw, y - bh), name: "r1", fill: orange-fill, stroke: orange-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*R1: Explicit Supersession*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[ADR declares override])
+    line("collapse.south", "r1.north", mark: arr)
+    y -= bh + gap
+
+    // R2 (orange)
+    rect((0, y), (bw, y - bh), name: "r2", fill: orange-fill, stroke: orange-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*R2: Specificity Wins*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[higher specificity $arrow.r$ higher priority])
+    line("r1.south", "r2.north", mark: arr)
+    y -= bh + gap
+
+    // R3 (orange)
+    rect((0, y), (bw, y - bh), name: "r3", fill: orange-fill, stroke: orange-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*R3: Recency Wins*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[higher adr\_id $arrow.r$ higher priority])
+    line("r2.south", "r3.north", mark: arr)
+    y -= bh + gap
+
+    // R4 (orange)
+    rect((0, y), (bw, y - bh), name: "r4", fill: orange-fill, stroke: orange-stroke, radius: 0.15)
+    content((bw / 2, y - 0.2), text(size: 0.77em)[*R4: Human Review*])
+    content((bw / 2, y - bh + 0.2), text(..sub)[flag unresolved])
+    line("r3.south", "r4.north", mark: arr)
+    y -= bh + gap
+
+    // Final violations
+    rect((0, y), (bw, y - bh), name: "final", fill: green-fill, stroke: green-stroke, radius: 0.15)
+    content("final", text(size: 0.85em)[*Final Violations*])
+    line("r4.south", "final.north", mark: arr)
+
+    // Side labels
+    content((bw + 0.3, -0.375), anchor: "west", text(size: 0.7em, fill: blue.darken(30%), weight: "bold")[Pre-resolution])
+    line((bw + 0.2, -bh), (bw + 0.2, -2 * bh - gap + bh), stroke: blue.darken(25%) + 0.6pt)
+
+    content((bw + 0.3, -0.375 - 3 * (bh + gap)), anchor: "west", text(size: 0.7em, fill: orange.darken(30%), weight: "bold")[R1-R4])
+    line((bw + 0.2, -3 * (bh + gap) - bh), (bw + 0.2, -7 * (bh + gap)), stroke: orange.darken(25%) + 0.6pt)
+  }),
+  caption: [Resolution pipeline: pre-resolution steps (blue) clean the raw violation set; R1-R4 rules (orange) resolve remaining conflicts by priority.],
+) <fig-resolution>
 
 #definition(name: "Specificity score")[
   The specificity of an FQN pattern is:
@@ -298,35 +378,12 @@ When multiple ADRs impose conflicting constraints on the same code region, ADRLi
   where $d(p)$ is the dot-depth of the pattern after stripping the `.*` suffix. Examples: `app.db.query` yields 3.0 (exact), `app.services.*` yields 1.5 (one wildcard), `app.*` yields 0.5 (broad wildcard).
 ]
 
-The resolution pipeline applies R1-R4 as default system behaviour for false-positive reduction. Ablation of R1-R4 would test whether the system works correctly, not whether it works better. MDS pruning, crystallization, and version-based pruning are planned future literature review topics for memory optimization, not yet specified.
-
-== Dependency Role Classification
-
-The `DependencyRole` attribute on FQN nodes classifies dependencies by their architectural function:
-
-#figure(
-  table(
-    columns: (auto, 1fr, auto),
-    stroke: 0.5pt,
-    inset: (x: 6pt, y: 4pt),
-    table.hline(stroke: 1.5pt),
-    table.header([*Role*], [*Description*], [*Architecturally relevant*]),
-    table.hline(stroke: 0.5pt),
-    [DEV_TOOL], [Testing, linting, formatting (pytest, black, mypy)], [No],
-    [INFRASTRUCTURE], [Databases, caches, message queues (redis, elasticsearch)], [Context-dependent],
-    [APPLICATION], [Frameworks and libraries (flask, django)], [Yes],
-    [INTERNAL], [Project modules], [Yes],
-    table.hline(stroke: 1.5pt),
-  ),
-  caption: [Dependency role classification for false-positive suppression.],
-) <table-roles>
-
-DEV_TOOL nodes are excluded from PROHIBITS object matching and REQUIRES reachability, directly suppressing the most common class of false positives identified in the dependency literature @latendresse2022 @weeraddana2024. INFRASTRUCTURE nodes are context-dependent: an ADR that says "the data layer must not depend on the web layer" makes `flask` in the data layer a real violation, not a false positive.
+The resolution pipeline uses two pieces of ADR metadata: the numeric `adr_id` (which encodes recency and supports R3) and the `specificity` score (which supports R2). ADRs marked `SUPERSEDED` or `REJECTED` are excluded from constraint extraction, so stale ADRs never enter the pipeline. Every surviving violation carries the full 5-tuple `(subject, predicate, object, matched_fqn, adr_id)`, which serves as a stable identity key for dismissal: once a developer dismisses a violation, it stays dismissed across re-runs even as the ADG evolves.
 
 == The Novelty Claim
 
-No prior system combines all four of ADRLinter's pillars:
-
+No prior system combines all four of this research's pillars:
+// TODO: add more later
 #figure(
   table(
     columns: (auto, auto, auto, auto, auto, auto),
@@ -335,13 +392,9 @@ No prior system combines all four of ADRLinter's pillars:
     table.hline(stroke: 1.5pt),
     table.header([*System*], [*Diff-driven*], [*Graph traversal*], [*Declarative triples*], [*Both polarities*], [*Per-commit*]),
     table.hline(stroke: 0.5pt),
-    [*ADRLinter*], [yes], [yes], [yes], [yes], [yes],
-    [Archy], [yes], [yes], [no], [no], [yes],
-    [dependency-cruiser], [no], [no], [yes], [yes], [no],
-    [ArchUnit], [no], [no], [partial], [yes], [no],
-    [Axiom Refract], [no], [yes], [no], [no], [no],
-    [Seedat et al.], [yes], [yes], [no], [no], [n/a],
-    [Dart Sentinel], [yes], [no], [partial], [no], [yes],
+    [*This research*], [yes], [yes], [yes], [yes], [yes],
+    [Seedat et al. @seedat2024], [yes], [yes], [no], [no], [n/a],
+    [Dart Sentinel @sentinel2025], [yes], [no], [partial], [no], [yes],
     table.hline(stroke: 1.5pt),
   ),
   caption: [Novelty comparison: no prior system combines all four pillars.],
@@ -350,89 +403,21 @@ No prior system combines all four of ADRLinter's pillars:
 Each component has prior art; the combination does not.
 
 // ============================================================
-// 4. IMPLEMENTATION
-// ============================================================
-= Implementation
-
-ADRLinter is implemented in Python 3.12, with a FastAPI service layer, Neo4j as the persistent graph store, and Tree-sitter for syntactic parsing. The system is containerised via Docker Compose for reproducibility.
-
-== System Architecture
-
-The pipeline orchestrates the following stages:
-
-#figure(
-  table(
-    columns: (auto, 1fr, 1fr),
-    stroke: 0.5pt,
-    inset: (x: 6pt, y: 4pt),
-    table.hline(stroke: 1.5pt),
-    table.header([*Stage*], [*Input*], [*Output*]),
-    table.hline(stroke: 0.5pt),
-    [1. Seed], [Repository + ADR directory], [ADG with structural edges],
-    [2. Extract], [ADR markdown files], [SymbolicConstraints (LLM-assisted)],
-    [3. Resolve], [SymbolicConstraints + ADG], [ConstraintEdges with FQN patterns],
-    [4. Merge], [ADG + ConstraintEdges], [ADG with constraint edges + specificity],
-    [5. Diff], [Git commit SHA], [DiffResult (changed FQNs)],
-    [6. Augment], [ADG + CommitDiff], [Augmented ADG (new edges from diff)],
-    [7. Detect (CPT)], [DiffResult + ADG], [CPTResult (violations, orphans)],
-    [8. Dismiss], [CPTResult + Dismissal list], [Filtered violations],
-    table.hline(stroke: 1.5pt),
-  ),
-  caption: [ADRLinter pipeline stages.],
-) <table-pipeline-stages>
-
-The core data model is defined in `app/services/models.py`. Key types include `FQNNode` (an FQN with kind, role, and source location), `Edge` (typed structural edge), `ConstraintEdge` (subject-predicate-object triple with specificity, ADR provenance, and justification), and `Violation` (a detected violation with matched FQNs, match status, and evidence).
-
-== Symbolic Constraint Resolution
-
-The symbolic resolver (`app/services/adg/symbolic_resolver.py`) bridges the gap between natural-language ADR text and FQN patterns in the code graph. It operates in three stages:
-
-+ _General match_: Exact or wildcard match of `role_general` against module FQNs.
-+ _Specific narrow_: Substring-match `role_specific` against descendants of general matches, with priority ordering: exact > prefix overlap > substring containment.
-+ _Fallback_: Substring-match `role_specific` against all ADG nodes when general matching fails.
-
-External dependencies (packages not in the code graph) are classified by role using package metadata and known registries, creating EXTERNAL nodes with appropriate `DependencyRole` values.
-
-== CPT Detection Engine
-
-The detection engine (`app/services/cpt/engine.py`) implements the algorithm from Figure @alg-cpt. Two predicate classes are checked:
-
-- _PROHIBITS (structural)_: For each constraint with a `prohibits_*` predicate, check whether any subject FQN can reach any object FQN via the structural edge kinds. If so, a violation is reported.
-- _REQUIRES (change-triggered)_: For each changed FQN and each constraint with a `requires_*` predicate whose subject scope contains the changed FQN, check whether the changed FQN can reach any object FQN. If not, a violation is reported.
-
-Both checks use BFS on the full code-graph adjacency, with DEV_TOOL nodes excluded from traversal and matching.
-
-== Resolution and Dismissal
-
-After detection, violations pass through two resolution stages:
-
-+ _Conflict resolution_ (`app/services/cpt/resolution.py`): Deduplicate violations, suppress module-level children when the parent already matches, and apply the `suppress_outweighed_prohibits`/`suppress_outweighed_requires` rules based on specificity scores and ADR recency.
-+ _Dismissal_ (`app/services/cpt/dismissal.py`): A human-review mechanism where false positives are dismissed and excluded from future reports.
-
-== Specificity Computation
-
-The specificity score is computed in `app/services/pipeline.py`:
-
-$ "specificity"(p) = d(p) + cases(0 & "if" p "ends with .*", 1 & "otherwise") $
-
-This ensures that more specific patterns (e.g., `app.db.query` at 3.0) outweigh broader wildcards (e.g., `app.*` at 0.5) in conflict resolution.
-
-// ============================================================
 // 5. EVALUATION FRAMEWORK
 // ============================================================
 = Evaluation Framework
 
-== Research Questions
+// == Research Questions
 
-The evaluation addresses three research questions:
+// The evaluation addresses three research questions:
 
-+ _RQ1 (Effectiveness)_: Does CPT detect architectural violations that an LLM baseline misses, particularly transitive violations?
-+ _RQ2 (Precision)_: What is the precision of CPT-detected violations, measured through human review?
-+ _RQ3 (Optimization trade-offs)_: Do optimisations (MDS pruning, crystallization, version-based pruning) trade precision for speed/token savings, and by how much?
+// + _RQ1 (Effectiveness)_: Does CPT detect architectural violations that an LLM baseline misses, particularly transitive violations?
+// + _RQ2 (Precision)_: What is the precision of CPT-detected violations, measured through human review?
+// + _RQ3 (Optimization trade-offs)_: Do optimisations (MDS pruning, crystallization, version-based pruning) trade precision for speed/token savings, and by how much?
 
 == Evaluation Design
 
-=== Subtask 2: CPT Detection vs Pi+LLM Baseline
+=== CPT Detection vs Pi+LLM Baseline
 
 The baseline is a Pi agent harness with state-of-the-art LLMs (2-3 models: one frontier, two open/affordable). Pi provides tool access (grep, file reading) with a 20 tool-call cap. Both CPT and Pi receive the same ADR text and repo file tree. The prompt gives no hints about graph traversal or CPT.
 
@@ -482,25 +467,19 @@ A repository qualifies if it has 3+ ADRs with identifiable PROHIBITS/REQUIRES co
 
 The primary source is the ADR-Study-Dataset @buchgeher23 (921 repos, 6,362 ADRs), supplemented by Su et al. @su2026 (109 repos, 980 ADRs). `python-tuf` (10 ADRs, Nygard format, checkable constraints, 1,712 GitHub stars) is confirmed as the first repository; additional repositories will be selected from the ADR-Study-Dataset filtered for Python and 3+ code-inferable ADRs.
 
-For R1-R4 validation, natural ADR-ADR conflicts are rare (~0.29% of pairs @dhaouadi2025). The strategy is to first curate naturally occurring conflicts from real repos, then inject synthetic conflict ADRs if fewer than approximately 10 natural conflicts are found across all repos. Only the conflicting ADR text is synthetic; the code and structural context remain real.
+For R1-R4 validation, the strategy is to first curate naturally occurring conflicts from real repos, then inject synthetic conflict ADRs if fewer than approximately 10 natural conflicts are found across all repos. Only the conflicting ADR text is synthetic; the code and structural context remain real.
 
 // ============================================================
 // 6. PLANNED FURTHER WORK
 // ============================================================
 = Planned Further Work
 
-The remaining work for COMP9992 spans 10 weeks.
-
-+ _Weeks 1-4_: Select 4 additional repositories from the ADR-Study-Dataset (python-tuf confirmed as the first). Design the Pi+LLM prompt template. Pilot ADRLinter on python-tuf. Run the full evaluation: CPT vs Pi+LLM across all 5 repositories. Conduct human review for ground truth annotation.
-+ _Weeks 5-7_: Literature review of incremental graph computation, MDS pruning, crystallization, and version-based pruning as potential optimisations. Run ablation of R1-R4 (correctness test). Specify and implement optimisation ablation rows if supported by the literature.
-+ _Weeks 8-10_: Replace `fqn_matches_pattern` binary matching with a scored heuristic tree of the ArdoCo shape. Validate R1-R4 conflict resolution on natural and synthetic conflict instances. Write the thesis.
-
 // ============================================================
 // 7. CONCLUSION
 // ============================================================
 = Conclusion
 
-This report has presented ADRLinter, a system that closes the loop between architectural decisions recorded as ADRs and the code that implements them. The literature review identified a gap that no prior system fills: the combination of per-commit diff-driven scoping, full-graph traversal with multi-source BFS, declarative constraint triples with both positive and negative polarity, and deterministic conflict resolution. The theoretical framework formalises this gap as the ADG model and the CPT algorithm, with R1-R4 resolution providing false-positive reduction and specificity scoring providing a principled ordering for ambiguous constraints.
+This report has presented this research, a system that closes the loop between architectural decisions recorded as ADRs and the code that implements them. The literature review identified a gap that no prior system fills: the combination of per-commit diff-driven scoping, full-graph traversal with multi-source BFS, declarative constraint triples with both positive and negative polarity, and deterministic conflict resolution. The theoretical framework formalises this gap as the ADG model and the CPT algorithm, with R1-R4 resolution providing false-positive reduction and specificity scoring providing a principled ordering for ambiguous constraints.
 
 The implementation demonstrates that the approach is feasible: the dual-track pipeline (Tree-sitter for syntax, LLM for semantics) constructs the ADG; the symbolic resolver bridges natural-language ADR text to FQN patterns; the CPT engine detects both structural and change-triggered violations; and the resolution pipeline applies R1-R4 with dismissal for human oversight.
 
